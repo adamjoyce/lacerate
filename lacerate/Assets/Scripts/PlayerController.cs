@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerController : MonoBehaviour 
 {
@@ -45,6 +43,8 @@ public class PlayerController : MonoBehaviour
             //float fireStrength = (direction.magnitude - 0) / (Screen.width - 0) * (300 - 1) + 1;
             rb.AddForce(-direction * 5); //* fireStrength);
             directionChosen = false;
+
+            Debug.Log(Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, 0, 0)));
         }
 	}
 }
