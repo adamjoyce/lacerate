@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private Vector2 startPosInWorld;        // The first touch position in world space.
     private Vector2 direction;              // The direction the player will be fired.
     private bool directionChosen = false;   // True when the player has chosen a direction to fire.
+    private bool canFire = true;            // True when a new firing touch can occur.
     private float scaledMagnitude = 0.0f;   // The current magnitude of the force scaled to fall between powerScaleMin and powerScaleMax.
 
 	/* Use this for initialization. */
@@ -30,35 +31,60 @@ public class PlayerController : MonoBehaviour
 	private void Update() 
 	{
         // Firing Controls.
-        if (Input.touchCount > 0)
+        if (Input.touchCount == 0 && !canFire)
         {
-            // A finger is touching the screen.
-            Touch touch = Input.GetTouch(0);
-            switch (touch.phase)
-            {
-                case TouchPhase.Began:
-                    firstTouchPosition = touch.position;
-                    touchIndicator.position = (Vector2)Camera.main.ScreenToWorldPoint(firstTouchPosition);
-                    touchIndicator.GetComponent<SpriteRenderer>().enabled = true;
-                    break;
-
-                case TouchPhase.Moved:
-                    direction = touch.position - firstTouchPosition;
-                    ScaleDirectionIndicator(direction);
-                    break;
-
-                case TouchPhase.Ended:
-                    directionChosen = true;
-                    directionIndicator.localScale = new Vector2(1, 1);
-                    touchIndicator.GetComponent<SpriteRenderer>().enabled = false;
-                    break;
-            }
+            // Allow a new firing touch to occur.
+            canFire = true;
         }
-        else if (directionChosen)
+        else if (canFire)
         {
-            // The player has lifted their finger so fire the player avatar.
-            rb.AddForce(-direction.normalized * scaledMagnitude * forceMultiplier);
-            directionChosen = false;
+            // A firing touch is ready to be performed.
+            if (Input.touchCount == 1)
+            {
+                // A finger is touching the screen.
+                Touch touch = Input.GetTouch(0);
+                SpriteRenderer touchSpriteRenderer = touchIndicator.GetComponent<SpriteRenderer>();
+                switch (touch.phase)
+                {
+                    case TouchPhase.Began:
+                        firstTouchPosition = touch.position;
+                        touchIndicator.position = (Vector2)Camera.main.ScreenToWorldPoint(firstTouchPosition);
+                        touchSpriteRenderer.enabled = true;
+                        break;
+
+                    case TouchPhase.Moved:
+                        direction = touch.position - firstTouchPosition;
+                        ScaleDirectionIndicator(direction);
+                        break;
+
+                    case TouchPhase.Ended:
+                        directionChosen = true;
+                        directionIndicator.localScale = Vector2.one;
+                        touchSpriteRenderer.enabled = false;
+                        break;
+                }
+            }
+            else if (Input.touchCount > 1)
+            {
+                // Cancel the current firing.
+                SpriteRenderer touchSpriteRenderer = touchIndicator.GetComponent<SpriteRenderer>();
+                if (touchSpriteRenderer.enabled)
+                    touchSpriteRenderer.enabled = false;
+
+                if (directionIndicator.localScale.x > 1)
+                    directionIndicator.localScale = Vector2.one;
+
+                if (directionChosen)
+                    directionChosen = false;
+
+                canFire = false;
+            }
+            else if (directionChosen)
+            {
+                // The player has lifted their finger so fire the player avatar.
+                rb.AddForce(-direction.normalized * scaledMagnitude * forceMultiplier);
+                directionChosen = false;
+            }
         }
 	}
 
