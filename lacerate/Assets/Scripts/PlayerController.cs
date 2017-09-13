@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviour
     private Vector2 startPosInWorld;        // The first touch position in world space.
     private Vector2 direction;              // The direction the player will be fired.
     private bool directionChosen = false;   // True when the player has chosen a direction to fire.
-    [SerializeField]
     private bool canFire = true;            // True when a new firing touch can occur.
     private float scaledMagnitude = 0.0f;   // The current magnitude of the force scaled to fall between powerScaleMin and powerScaleMax.
 
@@ -70,6 +69,7 @@ public class PlayerController : MonoBehaviour
             else if (Input.touchCount > 1)
             {
                 // Cancel the current firing.
+                // Hide the touch sprite.
                 SpriteRenderer touchSpriteRenderer = touchIndicator.GetComponent<SpriteRenderer>();
                 if (touchSpriteRenderer.enabled)
                     touchSpriteRenderer.enabled = false;
@@ -86,15 +86,20 @@ public class PlayerController : MonoBehaviour
                 if (canFire)
                     canFire = false;
             }
-            else if (directionChosen)
-            {
-                // The player has lifted their finger so fire the player avatar.
-                rb.AddForce(-direction.normalized * scaledMagnitude * forceMultiplier);
-                directionChosen = false;
-                canFire = false;
-            }
         }
 	}
+
+    /* Fixed Update is called once per physics cycle. */
+    private void FixedUpdate()
+    {
+        if (directionChosen)
+        {
+            // The player has lifted their finger so fire the player avatar.
+            rb.AddForce(-direction.normalized * scaledMagnitude * forceMultiplier);
+            directionChosen = false;
+            canFire = false;
+        }
+    }
 
     /* Scales the direction indicator. */
     private void ScaleDirectionIndicator(Vector2 direction)
