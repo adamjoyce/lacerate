@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private Vector2 startPosInWorld;        // The first touch position in world space.
     private Vector2 direction;              // The direction the player will be fired.
     private bool directionChosen = false;   // True when the player has chosen a direction to fire.
+    [SerializeField]
     private bool canFire = true;            // True when a new firing touch can occur.
     private float scaledMagnitude = 0.0f;   // The current magnitude of the force scaled to fall between powerScaleMin and powerScaleMax.
 
@@ -31,7 +32,7 @@ public class PlayerController : MonoBehaviour
 	private void Update() 
 	{
         // Firing Controls.
-        if (Input.touchCount == 0 && !canFire)
+        if (!canFire && Input.touchCount == 0 && rb.velocity.magnitude < 0.1f)
         {
             // Allow a new firing touch to occur.
             canFire = true;
@@ -44,6 +45,7 @@ public class PlayerController : MonoBehaviour
                 // A finger is touching the screen.
                 Touch touch = Input.GetTouch(0);
                 SpriteRenderer touchSpriteRenderer = touchIndicator.GetComponent<SpriteRenderer>();
+
                 switch (touch.phase)
                 {
                     case TouchPhase.Began:
@@ -61,6 +63,7 @@ public class PlayerController : MonoBehaviour
                         directionChosen = true;
                         directionIndicator.localScale = Vector2.one;
                         touchSpriteRenderer.enabled = false;
+                        directionIndicator.gameObject.SetActive(false);
                         break;
                 }
             }
@@ -71,19 +74,24 @@ public class PlayerController : MonoBehaviour
                 if (touchSpriteRenderer.enabled)
                     touchSpriteRenderer.enabled = false;
 
-                if (directionIndicator.localScale.x > 1)
-                    directionIndicator.localScale = Vector2.one;
+                // Hide the direction indicator is necessary.
+                if (directionIndicator.gameObject.activeInHierarchy)
+                    directionIndicator.gameObject.SetActive(false);
 
+                // Reset our direction selected control variable.
                 if (directionChosen)
                     directionChosen = false;
 
-                canFire = false;
+                // Ensure the player cannot fire again without lifting their finger.
+                if (canFire)
+                    canFire = false;
             }
             else if (directionChosen)
             {
                 // The player has lifted their finger so fire the player avatar.
                 rb.AddForce(-direction.normalized * scaledMagnitude * forceMultiplier);
                 directionChosen = false;
+                canFire = false;
             }
         }
 	}
@@ -98,6 +106,9 @@ public class PlayerController : MonoBehaviour
         // Face the indicator in the correct direction.
         float angle = Mathf.Atan2(-direction.y, -direction.x) * Mathf.Rad2Deg;
         directionIndicator.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+
+        if (!directionIndicator.gameObject.activeInHierarchy)
+            directionIndicator.gameObject.SetActive(true);
     }
 
     /* Scales a value within a certain range to be within another range, maintaining the original ratio. */
