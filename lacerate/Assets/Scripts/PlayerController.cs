@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour
 	private void Update() 
 	{
         // Firing Controls.
-        if (!canFire && Input.touchCount == 0 && rb.velocity.magnitude < 0.1f)
+        if (!canFire && Input.touchCount == 0 && rb.velocity.magnitude < 0.2f)
         {
             // Allow a new firing touch to occur.
             canFire = true;
